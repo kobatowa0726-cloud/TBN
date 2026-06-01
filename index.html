@@ -278,6 +278,13 @@ let zoomLevel = 1;
 let lastPredictTime = 0;
 let initialDistance = 0;
 
+// 認識安定化用
+let stableName = "";
+let stableCount = 0;
+
+let lockedClass = "";
+let lockUntil = 0;
+
 async function init() {
 
     const modelURL = URL + "model.json";
@@ -462,6 +469,45 @@ async function predict() {
         }
     }
 
+    // ===== 連続認識チェック =====
+
+if(highest.className === stableName){
+
+    stableCount++;
+
+}else{
+
+    stableName = highest.className;
+    stableCount = 0;
+}
+
+// ===== ロック処理 =====
+
+if(
+    highest.probability > 0.70 &&
+    stableCount >= 5
+){
+
+    lockedClass = highest.className;
+    lockUntil = Date.now() + 1000;
+}
+
+// ロック中ならその商品を使う
+if(Date.now() < lockUntil){
+
+    highest.className = lockedClass;
+
+    const lockedPrediction =
+        prediction.find(
+            p => p.className === lockedClass
+        );
+
+    if(lockedPrediction){
+
+        highest = lockedPrediction;
+    }
+}
+
     // 表示
     labelContainer.innerHTML =
         highest.className +
@@ -475,7 +521,8 @@ async function predict() {
     button.classList.remove("active");
 
     // URL切り替え
-    if (highest.probability > 0.85) {
+    if (
+    highest.probability > 0.85 &&stableCount >= 5){
 
         switch(highest.className) {
 
