@@ -282,8 +282,12 @@ let initialDistance = 0;
 let stableName = "";
 let stableCount = 0;
 
-let lockedClass = "";
-let lockUntil = 0;
+// 確定した商品
+let confirmedClass = "";
+let confirmedURL = "";
+
+// 表示保持時間
+let confirmedUntil = 0;
 
 async function init() {
 
@@ -469,7 +473,7 @@ async function predict() {
         }
     }
 
-    // ===== 連続認識チェック =====
+// ===== 連続認識チェック =====
 
 if(highest.className === stableName){
 
@@ -478,113 +482,108 @@ if(highest.className === stableName){
 }else{
 
     stableName = highest.className;
-    stableCount = 0;
+    stableCount = 1;
 }
 
-// ===== ロック処理 =====
+// ===== 商品確定 =====
 
 if(
-    highest.probability > 0.70 &&
-    stableCount >= 5
+    highest.probability > 0.85 &&
+    stableCount >= 3 &&
+    highest.className !== "その他"
 ){
 
-    lockedClass = highest.className;
-    lockUntil = Date.now() + 1000;
-}
+    confirmedClass = highest.className;
 
-// ロック中ならその商品を使う
-if(Date.now() < lockUntil){
-
-    highest.className = lockedClass;
-
-    const lockedPrediction =
-        prediction.find(
-            p => p.className === lockedClass
-        );
-
-    if(lockedPrediction){
-
-        highest = lockedPrediction;
-    }
+    confirmedUntil =
+        Date.now() + 5000;
 }
 
     // 表示
-    labelContainer.innerHTML =
-        highest.className +
-        " : " +
-        Math.floor(
-            highest.probability * 100
-        ) + "%";
+    if(Date.now() < confirmedUntil){
 
-    currentURL = "";
+    labelContainer.innerHTML =
+        confirmedClass;
+
+    }else{
+
+    labelContainer.innerHTML =
+        "商品を認識してください";
+    }
+    if(Date.now() < confirmedUntil){
+
+    button.classList.add("active");
+
+    }else{
 
     button.classList.remove("active");
+    }
 
     // URL切り替え
-    if (
-    highest.probability > 0.85 &&stableCount >= 5){
+    if (highest.probability > 0.85 ){
 
-        switch(highest.className) {
+        confirmedURL = "";
+        switch(confirmedClass) {
 
             case "たまご蒸しパン":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/303213/";
 
                 break;
 
             case "ベルギーワッフル":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/322741/";
 
                 break;
 
             case "こしあんドーナツ":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/303745/";
 
                 break;
 
             case "タルタルフィッシュバーガー":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/303431/";
 
                 break;
 
             case "チョコチップクッキー":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/321625/";
 
                 break;
 
             case "エビマヨおにぎり":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/041802/";
 
                 break;
 
             case "ツナマヨおにぎり":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/041909/";
 
                 break;
 
             case "ピーナッツチョコ":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/322600/";
 
                 break;
 
             case "高菜おにぎり":
 
-                currentURL =
+                confirmedURL =
                 "https://www.sej.co.jp/products/a/item/042687/";
 
                 break;
@@ -606,9 +605,9 @@ document
 .getElementById("productButton")
 .onclick = () => {
 
-    if(currentURL !== "") {
+   if(confirmedURL !== "") {
 
-        window.open(currentURL);
+    window.open(confirmedURL);
     }
 }
 
