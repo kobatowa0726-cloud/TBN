@@ -7,7 +7,7 @@ user-scalable=no">
 <div id="app">
 
     <div id="version">
-        Ver 0608.2
+        Ver 0611.2
     </div>
 
     <div id="title">
@@ -15,6 +15,15 @@ user-scalable=no">
     </div>
 
     <div id="webcam-container"></div>
+
+    <div id="recognitionOverlay">
+
+    <div id="overlayText">
+        ✓ 商品を認識しました<br>
+        タップで再認識
+    </div>
+
+    </div>
 
     <div id="label-container">
         商品を認識してください
@@ -122,7 +131,10 @@ body{
     margin-top:20px;
 
     border-radius:20px;
+    
+    
 }
+
 
 canvas{
 
@@ -272,6 +284,44 @@ canvas{
     color:#999;
 }
 
+#recognitionOverlay{
+
+    position:absolute;
+
+    top:40px;
+
+    left:20px;
+
+    width:calc(100% - 40px);
+
+    height:56.5vh;
+
+    display:none;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:rgba(0,0,0,0.25);
+
+    border-radius:20px;
+
+    z-index:100;
+}
+
+#overlayText{
+
+    color:white;
+
+    text-align:center;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    text-shadow:0 0 8px black;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -416,6 +466,56 @@ async function init() {
         document.getElementById(
             "label-container"
         );
+
+    document
+    .getElementById("webcam-container")
+    .addEventListener("touchstart", () => {
+
+    confirmedClass = "";
+    confirmedURL = "";
+    confirmedUntil = 0;
+
+    stableName = "";
+    stableCount = 0;
+
+    currentURL = "";
+
+    document
+    .getElementById("productButton")
+    .classList.remove("active");
+
+    labelContainer.innerHTML =
+        "商品を認識してください";
+    });
+
+    document
+.getElementById("recognitionOverlay")
+.addEventListener("touchstart", () => {
+
+    confirmedClass = "";
+    confirmedURL = "";
+    confirmedUntil = 0;
+
+    stableName = "";
+    stableCount = 0;
+
+    currentURL = "";
+
+    document
+    .getElementById("productButton")
+    .classList.remove("active");
+
+    document
+    .getElementById("recognitionOverlay")
+    .style.display = "none";
+
+    labelContainer.innerHTML =
+        "商品を認識してください";
+});
+    
+    document
+    .getElementById("recognitionOverlay")
+    .style.display = "none";    
 }
 
 async function loop() {
@@ -433,6 +533,8 @@ async function loop() {
     }
 
     window.requestAnimationFrame(loop);
+
+
 }
 
 async function predict() {
@@ -526,10 +628,18 @@ if(
     labelContainer.innerHTML =
         confirmedClass;
 
-    }else{
+    document
+    .getElementById("recognitionOverlay")
+    .style.display = "flex";
+    }
+    else{
 
     labelContainer.innerHTML =
         "商品を認識してください";
+
+        document
+    .getElementById("recognitionOverlay")
+    .style.display = "none";
     }
     if(Date.now() < confirmedUntil){
 
@@ -606,6 +716,27 @@ if(
 
                 confirmedURL =
                 "https://www.sej.co.jp/products/a/item/341096/";
+
+                break;
+
+            case "プリングルズうましお":
+
+                confirmedURL =
+                "https://www.sej.co.jp/products/a/item/330642/";
+
+                break;
+
+            case "ジューシーハムサンド":
+
+                confirmedURL =
+                "https://www.sej.co.jp/products/a/item/053583/";
+
+                break;
+
+            case "ツナ＆きゅうりサンド":
+
+                confirmedURL =
+                "https://www.sej.co.jp/products/a/item/053551/";
 
                 break;
         }
