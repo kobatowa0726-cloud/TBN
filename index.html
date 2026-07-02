@@ -7,7 +7,7 @@ user-scalable=no">
 <div id="app">
 
     <div id="version">
-        Ver 0615.1
+        Ver 0702.1
     </div>
 
     <div id="title">
@@ -178,7 +178,7 @@ canvas{
 
     display:block;
 
-    margin:25px auto 0 auto;
+    margin:25px auto 0 auto;    
 
     background:#9e9e9e;
 
@@ -344,6 +344,8 @@ let zoomCtx;
 // 現在の商品URL保存用
 let currentURL = "";
 
+let products = [];
+
 // ズーム用
 let zoomLevel = 1;
 let lastPredictTime = 0;
@@ -361,6 +363,8 @@ let confirmedURL = "";
 let confirmedUntil = 0;
 
 async function init() {
+
+    await loadProducts();
 
     const modelURL = URL + "model.json";
     const metadataURL = URL + "metadata.json";
@@ -654,99 +658,110 @@ if(
     if (highest.probability > 0.85 ){
 
         confirmedURL = "";
-        switch(confirmedClass) {
 
-            case "たまご蒸しパン":
+        const product =
+    products.find(
+        p => p.name === confirmedClass
+        );
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/303213/";
+    if(product){
 
-                break;
+    confirmedURL =
+        product.url;
+    }
+        // switch(confirmedClass) {
 
-            case "ベルギーワッフル":
+        //     case "たまご蒸しパン":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/322741/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/303213/";
 
-                break;
+        //         break;
 
-            case "こしあんドーナツ":
+        //     case "ベルギーワッフル":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/303745/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/322741/";
 
-                break;
+        //         break;
 
-            case "タルタルフィッシュバーガー":
+        //     case "こしあんドーナツ":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/303431/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/303745/";
 
-                break;
+        //         break;
 
-            case "チョコチップクッキー":
+        //     case "タルタルフィッシュバーガー":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/321625/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/303431/";
 
-                break;
+        //         break;
 
-            case "エビマヨおにぎり":
+        //     case "チョコチップクッキー":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/041802/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/321625/";
 
-                break;
+        //         break;
 
-            case "ツナマヨおにぎり":
+        //     case "エビマヨおにぎり":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/041909/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/041802/";
 
-                break;
+        //         break;
 
-            case "ピーナッツチョコ":
+        //     case "ツナマヨおにぎり":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/321450/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/041909/";
 
-                break;
+        //         break;
 
-            case "蒙古タンメン":
+        //     case "ピーナッツチョコ":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/341096/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/321450/";
 
-                break;
+        //         break;
 
-            case "プリングルズうましお":
+        //     case "蒙古タンメン":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/330642/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/341096/";
 
-                break;
+        //         break;
 
-            case "ジューシーハムサンド":
+        //     case "プリングルズうましお":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/053583/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/330642/";
 
-                break;
+        //         break;
 
-            case "ツナ＆きゅうりサンド":
+        //     case "ジューシーハムサンド":
 
-                confirmedURL =
-                "https://www.sej.co.jp/products/a/item/053551/";
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/053583/";
 
-                break;
-        }
+        //         break;
+
+        //     case "ツナ＆きゅうりサンド":
+
+        //         confirmedURL =
+        //         "https://www.sej.co.jp/products/a/item/053551/";
+
+        //         break;
+        // }
 
         // ボタンON
         if(
-            currentURL !== "" &&
+            confirmedURL !== "" &&
             highest.className !== "その他"
         ){
-
+            
             button.classList.add("active");
         }
     }
@@ -787,6 +802,41 @@ searchBox.addEventListener(
         }
     }
 });
+
+async function loadProducts(){
+
+    const response =
+        await fetch("./my_model/products.csv");
+
+    const text =
+        await response.text();
+
+    const rows =
+        text.split(/\r?\n/);
+
+    products = [];
+
+    // 0行目：商品管理表
+    // 1行目：name,url
+    // 2行目以降：データ
+    for(let i = 2; i < rows.length; i++){
+
+        if(rows[i].trim() === "") continue;
+
+        const cols =
+            rows[i].split(",");
+
+        products.push({
+
+            name: cols[1],
+
+            url: cols[2]
+
+        });
+    }
+
+    console.log(products);
+}
 
 // 起動
 init();
