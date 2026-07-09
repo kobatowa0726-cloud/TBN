@@ -7,11 +7,11 @@ user-scalable=no">
 <div id="app">
 
     <div id="version">
-        Ver 0702.1
+        Ver 0709.1
     </div>
 
     <div id="title">
-        
+
     </div>
 
     <div id="webcam-container"></div>
@@ -328,6 +328,8 @@ canvas{
 
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 <script type="text/javascript">
 
 const URL = "./my_model/";
@@ -620,10 +622,19 @@ if(
     highest.className !== "その他"
 ){
 
-    confirmedClass = highest.className;
+    const product =
+        products.find(
+            p => p.name === highest.className
+        );
 
-    confirmedUntil =
-        Date.now() + 5000;
+    if(product){
+
+        confirmedClass = highest.className;
+        confirmedURL = product.url;
+
+        confirmedUntil =
+            Date.now() + 5000;
+    }
 }
 
     // 表示
@@ -655,20 +666,31 @@ if(
     }
 
     // URL切り替え
-    if (highest.probability > 0.85 ){
+    //if (highest.probability > 0.85 ){
 
-        confirmedURL = "";
+    //     confirmedURL = "";
 
-        const product =
-    products.find(
-        p => p.name === confirmedClass
-        );
+    // const product =
+    // products.find(
+    //     p => p.name === confirmedClass
+    // );
 
-    if(product){
+    // if(!product){
 
-    confirmedURL =
-        product.url;
-    }
+    // confirmedClass = "";
+    // confirmedURL = "";
+    // confirmedUntil = 0;
+
+    // return;
+    // }
+
+    //confirmedURL = product.url;
+
+    // if(product){
+
+    //     confirmedURL =
+    //         product.url;
+    // }
         // switch(confirmedClass) {
 
         //     case "たまご蒸しパン":
@@ -757,14 +779,14 @@ if(
         // }
 
         // ボタンON
-        if(
-            confirmedURL !== "" &&
-            highest.className !== "その他"
-        ){
+    //     if(
+    //         confirmedURL !== "" &&
+    //         highest.className !== "その他"
+    //     ){
             
-            button.classList.add("active");
-        }
-    }
+    //         button.classList.add("active");
+    //     }
+    // }
 }
 
 // ボタン押した時
@@ -806,36 +828,29 @@ searchBox.addEventListener(
 async function loadProducts(){
 
     const response =
-        await fetch("./my_model/products.csv");
+        await fetch("./my_model/products.xlsx");
 
-    const text =
-        await response.text();
+    const arrayBuffer =
+        await response.arrayBuffer();
 
-    const rows =
-        text.split(/\r?\n/);
-
-    products = [];
-
-    // 0行目：商品管理表
-    // 1行目：name,url
-    // 2行目以降：データ
-    for(let i = 2; i < rows.length; i++){
-
-        if(rows[i].trim() === "") continue;
-
-        const cols =
-            rows[i].split(",");
-
-        products.push({
-
-            name: cols[1],
-
-            url: cols[2]
-
+    const workbook =
+        XLSX.read(arrayBuffer, {
+            type: "array"
         });
-    }
+
+    // 一枚目のシート取得
+    const sheet =
+        workbook.Sheets[
+            workbook.SheetNames[0]
+        ];
+
+   products =
+    XLSX.utils.sheet_to_json(sheet,{
+        range:1,header:0
+    });
 
     console.log(products);
+    console.log(workbook.SheetNames);
 }
 
 // 起動
